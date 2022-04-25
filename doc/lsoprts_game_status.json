@@ -1,0 +1,11 @@
+{
+  1:	"Not started yet The event has not started yet",
+  2:	"In progress The event is live",
+  3:	"Finished The event is finished",
+  4:	"Cancelled The event has been cancelled",
+  5:	"Postponed The event has been postponed",
+  6:	"Interrupted The event has been interrupted",
+  7:	"Abandoned The event has been abandoned",
+  8:	"Coverage lost The coverage for this event has been lost",
+  9:	"About to start The event has not started but is about to. NOTE: This status will be shown up to 30 minutes before the event has started"
+}

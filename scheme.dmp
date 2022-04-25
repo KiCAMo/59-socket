@@ -1,0 +1,1085 @@
+create table betting
+(
+    betting_seq                         int auto_increment
+        primary key,
+    betting_sitename                    varchar(50)                                            null,
+    betting_regstamp                    int                                                    null,
+    betting_regdatetime                 datetime                     default CURRENT_TIMESTAMP null,
+    betting_enabled                     enum ('y', 'n')              default 'y'               null,
+    betting_betcode                     varchar(64)                                            null,
+    betting_member                      int                                                    null,
+    betting_ip                          text                                                   null,
+    betting_agent                       text                                                   null,
+    betting_status                      enum ('정상', '취소')                                      null,
+    betting_side                        enum ('승', '무', '패')                                   null,
+    betting_folders                     int                                                    null,
+    betting_bet_amount                  int                                                    null,
+    betting_odds                        text                                                   null,
+    betting_total_odds                  text                                                   null,
+    betting_total_odds_penalty          text                                                   null,
+    betting_total_odds_penalty_reason   text                                                   null,
+    betting_expected_prize              text                                                   null,
+    betting_rolling_amount              text                                                   null,
+    betting_rolling_ratio               text                                                   null,
+    betting_rolling_reason              enum ('레벨', '파트너', '개인')                               null,
+    betting_game                        int                                                    null,
+    betting_game_attr                   enum ('일반', '공지', '이벤트', '보너스', '빅게임')                 null,
+    betting_game_sports_name_en         text                                                   null,
+    betting_game_sports_name_kr         text                                                   null,
+    betting_game_sports_icon            text                                                   null,
+    betting_game_markets_name_en        text                                                   null,
+    betting_game_markets_name_kr        text                                                   null,
+    betting_game_markets_icon           text                                                   null,
+    betting_game_leagues_name_en        text                                                   null,
+    betting_game_leagues_name_kr        text                                                   null,
+    betting_game_leagues_icon           text                                                   null,
+    betting_game_home_name_en           text                                                   null,
+    betting_game_home_name_kr           text                                                   null,
+    betting_game_home_icon              text                                                   null,
+    betting_game_away_name_en           text                                                   null,
+    betting_game_away_name_kr           text                                                   null,
+    betting_game_away_icon              text                                                   null,
+    betting_game_starttime              datetime                                               null,
+    betting_game_result_home            text                                                   null,
+    betting_game_result_away            text                                                   null,
+    betting_game_status                 enum ('대기', '취소', '연기', '진행', '종료')                    null,
+    betting_line                        text                                                   null,
+    betting_home_odds                   text                                                   null,
+    betting_draw_odds                   text                                                   null,
+    betting_away_odds                   text                                                   null,
+    betting_result                      enum ('wait', 'hit', 'exception', 'miss')              null,
+    betting_total_result                enum ('hit', 'miss', 'wait') default 'wait'            null,
+    betting_total_result_memo           text                                                   null,
+    betting_total_result_stamp          int                                                    null,
+    betting_total_result_datetime       datetime                                               null,
+    betting_auto_exception              enum ('y', 'n')              default 'n'               null,
+    betting_payed                       enum ('y', 'n')              default 'n'               null,
+    betting_payed_amount                int                          default 0                 null,
+    betting_payed_amount_penalty        int                          default 0                 null,
+    betting_payed_amount_penalty_reason text                                                   null,
+    betting_payed_stamp                 int                          default 0                 null,
+    betting_payed_admin                 int                          default 0                 null,
+    betting_payed_ip                    text                                                   null,
+    betting_payed_agent                 text                                                   null,
+    betting_cancel_by                   int                          default 0                 null,
+    betting_cancel_stamp                int                          default 0                 null,
+    betting_cancel_ip                   text                                                   null,
+    betting_cancel_agent                text                                                   null
+);
+
+create index betting_betcode
+    on betting (betting_betcode);
+
+create index betting_member
+    on betting (betting_member);
+
+create index betting_payed
+    on betting (betting_payed);
+
+create index betting_payed_stamp
+    on betting (betting_payed_stamp);
+
+create index betting_regdatetime
+    on betting (betting_regdatetime);
+
+create index betting_total_result_datetime
+    on betting (betting_total_result_datetime);
+
+create definer = admin@`%` trigger trig_b_ins_betting
+    before insert
+    on betting
+    for each row
+begin
+    if (new.betting_regstamp is null)
+    then
+        set new.betting_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table bookmakers
+(
+    bookmakers_seq      int auto_increment
+        primary key,
+    bookmakers_id       int  null,
+    bookmakers_icon     text null,
+    bookmakers_name_en  text null,
+    bookmakers_name_kr1 text null,
+    bookmakers_name_kr2 text null,
+    constraint bookmakers_id
+        unique (bookmakers_id)
+);
+
+create table cash
+(
+    cash_seq           int auto_increment
+        primary key,
+    cash_sitename      varchar(50)                                             null,
+    cash_regstamp      int                                                     null,
+    cash_regdatetime   datetime        default CURRENT_TIMESTAMP               null,
+    cash_enabled       enum ('y', 'n') default 'y'                             null,
+    cash_member        int                                                     null,
+    cash_type          enum ('입금', '출금')                                       null,
+    cash_bankname      text                                                    null,
+    cash_account       text                                                    null,
+    cash_ownername     text                                                    null,
+    cash_deposit_name  text                                                    null,
+    cash_ip            text                                                    null,
+    cash_agent         text                                                    null,
+    cash_status        enum ('접수', '대기', '(회)접수취소', '(관)접수취소', '처리완료', '처리취소') null,
+    cash_reason        varchar(100)    default ''                              null,
+    cash_amount        int                                                     null,
+    cash_done_by       int                                                     null,
+    cash_done_stamp    int                                                     null,
+    cash_done_datetime datetime                                                null,
+    cash_done_ip       text                                                    null,
+    cash_done_agent    text                                                    null
+);
+
+create index cash_done_datetime
+    on cash (cash_done_datetime);
+
+create index cash_member
+    on cash (cash_member);
+
+create index cash_regdatetime
+    on cash (cash_regdatetime);
+
+create index cash_regstamp
+    on cash (cash_regstamp);
+
+create index cash_status
+    on cash (cash_status);
+
+create definer = admin@`%` trigger trig_b_ins_dc
+    before insert
+    on cash
+    for each row
+begin
+    if (new.cash_regstamp is null)
+    then
+        set new.cash_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table event
+(
+    event_seq           int auto_increment
+        primary key,
+    event_sitenames     text                                      null,
+    event_regstamp      int                                       null,
+    event_regdatetime   datetime        default CURRENT_TIMESTAMP null,
+    event_enabled       enum ('y', 'n') default 'y'               null,
+    event_category      text                                      null,
+    event_color         varchar(7)                                null,
+    event_author        int                                       null,
+    event_author_ip     text                                      null,
+    event_author_agent  text                                      null,
+    event_comment_count int             default 0                 null,
+    event_startdate     datetime                                  null,
+    event_enddate       datetime                                  null,
+    event_subject       text                                      null,
+    event_image         text                                      null
+);
+
+create index event_enddate
+    on event (event_enddate);
+
+create index event_startdate
+    on event (event_startdate);
+
+create definer = admin@`%` trigger trig_b_ins_event
+    before insert
+    on event
+    for each row
+begin
+    if (new.event_regstamp is null)
+    then
+        set new.event_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table event_category
+(
+    event_category_seq         int auto_increment
+        primary key,
+    event_category_sitename    varchar(50)                               null,
+    event_category_regstamp    int                                       null,
+    event_category_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    event_category_author      int                                       null,
+    event_category_name        varchar(25)                               null,
+    event_category_enabled     enum ('y', 'n') default 'y'               null,
+    event_category_order       int                                       null
+);
+
+create index event_category_name
+    on event_category (event_category_name);
+
+create index event_category_sitename
+    on event_category (event_category_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_event_category
+    before insert
+    on event_category
+    for each row
+begin
+    if (new.event_category_regstamp is null)
+    then
+        set new.event_category_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table event_comments
+(
+    event_comments_regstamp     int                                null,
+    event_comments_regdatetime  datetime default CURRENT_TIMESTAMP null,
+    event_comments_article      int                                null,
+    event_comments_author       int                                null,
+    event_comments_author_name  text                               null,
+    event_comments_author_grade int                                null,
+    event_comments_author_ip    text                               null,
+    event_comments_author_agent text                               null,
+    event_comments_content      text                               null
+);
+
+create index event_comments_article
+    on event_comments (event_comments_article);
+
+create definer = admin@`%` trigger trig_b_ins_event_comments
+    before insert
+    on event_comments
+    for each row
+begin
+    if (new.event_comments_regstamp is null)
+    then
+        set new.event_comments_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table game
+(
+    game_seq         bigint auto_increment
+        primary key,
+    game_regstamp    int                                                           null,
+    game_regdate     datetime                            default CURRENT_TIMESTAMP null,
+    game_id          bigint                                                        null,
+    game_status      enum ('대기', '취소', '연기', '진행', '종료') default '대기'              null,
+    game_sport       int                                                           null,
+    game_location    int                                                           null,
+    game_league      int                                                           null,
+    game_home_team   int                                                           null,
+    game_away_team   int                                                           null,
+    game_result_home text                                                          null,
+    game_result_away text                                                          null,
+    game_starttime   datetime                                                      null,
+    game_type        enum ('프리매치', '라이브', '미니게임', '로터스')                           null,
+    game_name        varchar(50)                                                   null,
+    constraint game_id
+        unique (game_id)
+);
+
+create definer = admin@`%` trigger trig_b_ins_events
+    before insert
+    on events
+    for each row
+begin
+    if (new.game_regstamp is null)
+    then
+        set new.game_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table game_meta
+(
+    game_meta_seq   bigint auto_increment
+        primary key,
+    game_meta_event int         null,
+    game_meta_name  text        null,
+    game_meta_value text        null,
+    game_detail     varchar(50) null
+);
+
+create index game_meta_event
+    on game_meta (game_meta_event);
+
+create table faq
+(
+    faq_seq         int auto_increment
+        primary key,
+    faq_sitenames   text                                      null,
+    faq_regstamp    int                                       null,
+    faq_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    faq_color       varchar(7)                                null,
+    faq_enabled     enum ('y', 'n') default 'y'               null,
+    faq_author      int                                       null,
+    faq_category1   int                                       null,
+    faq_category2   int                                       null,
+    faq_subject     text                                      null,
+    faq_content     text                                      null
+);
+
+create definer = admin@`%` trigger trig_b_ins_faq
+    before insert
+    on faq
+    for each row
+begin
+    if (new.faq_regstamp is null)
+    then
+        set new.faq_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table faq_category1
+(
+    faq_category1_seq         int auto_increment
+        primary key,
+    faq_category1_sitename    varchar(50)                               null,
+    faq_category1_regstamp    int                                       null,
+    faq_category1_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    faq_category1_author      int                                       null,
+    faq_category1_name        varchar(25)                               null,
+    faq_category1_enabled     enum ('y', 'n') default 'y'               null,
+    faq_category1_order       int                                       null
+);
+
+create index faq_category1_name
+    on faq_category1 (faq_category1_name);
+
+create index faq_category1_sitename
+    on faq_category1 (faq_category1_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_faq_category1
+    before insert
+    on faq_category1
+    for each row
+begin
+    if (new.faq_category1_regstamp is null)
+    then
+        set new.faq_category1_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table faq_category2
+(
+    faq_category2_seq         int auto_increment
+        primary key,
+    faq_category2_sitename    varchar(50)                               null,
+    faq_category2_regstamp    int                                       null,
+    faq_category2_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    faq_category2_author      int                                       null,
+    faq_category2_category1   varchar(25)                               null,
+    faq_category2_name        varchar(25)                               null,
+    faq_category2_enabled     enum ('y', 'n') default 'y'               null,
+    faq_category2_order       int                                       null
+);
+
+create index faq_category2_category1
+    on faq_category2 (faq_category2_category1);
+
+create index faq_category2_name
+    on faq_category2 (faq_category2_name);
+
+create index faq_category2_sitename
+    on faq_category2 (faq_category2_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_faq_category2
+    before insert
+    on faq_category2
+    for each row
+begin
+    if (new.faq_category2_regstamp is null)
+    then
+        set new.faq_category2_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table folders
+(
+    folders_seq            bigint auto_increment
+        primary key,
+    folders_regstamp       int                                                              null,
+    folders_regdate        datetime                               default CURRENT_TIMESTAMP null,
+    folders_is_autoupdate  enum ('y', 'n')                        default 'y'               null,
+    folders_attr           enum ('일반', '공지', '이벤트', '보너스', '빅게임') default '일반'              null,
+    folders_return_ratio   text                                                             null,
+    folders_market         int                                                              null,
+    folders_game           int                                                              null,
+    folders_bookmaker      int                                                              null,
+    folders_line           text                                                             null,
+    folders_home_price     text                                                             null,
+    folders_draw_price     text                                                             null,
+    folders_away_price     text                                                             null,
+    folders_exception      enum ('y', 'n')                        default 'n'               null,
+    folders_result         enum ('wait', 'home', 'draw', 'away')  default 'wait'            null,
+    folders_betcount       int                                    default 0                 null,
+    folders_betcount_home  int                                    default 0                 null,
+    folders_betcount_draw  int                                    default 0                 null,
+    folders_betcount_away  int                                    default 0                 null,
+    folders_betamount      int                                    default 0                 null,
+    folders_betamount_home int                                    default 0                 null,
+    folders_betamount_draw int                                    default 0                 null,
+    folders_betamount_away int                                    default 0                 null,
+    folders_type           enum ('프리매치', '라이브', '미니게임', '로터스')                              null,
+    folders_detail         varchar(50)                                                      null,
+    folders_name           varchar(50)                                                      null
+);
+
+create definer = admin@`%` trigger trig_b_ins_folders
+    before insert
+    on folders
+    for each row
+begin
+    if (new.folders_regstamp is null)
+    then
+        set new.folders_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table freeboard
+(
+    freeboard_seq              int auto_increment
+        primary key,
+    freeboard_sitename         varchar(50)                                                   null,
+    freeboard_regstamp         int                                                           null,
+    freeboard_regdatetime      datetime                            default CURRENT_TIMESTAMP null,
+    freeboard_status           enum ('대기', '(회)삭제', '(관)삭제', '완료') default '완료'              null,
+    freeboard_color            varchar(7)                                                    null,
+    freeboard_enabled          enum ('y', 'n')                     default 'y'               null,
+    freeboard_is_notice        enum ('y', 'n')                     default 'n'               null,
+    freeboard_is_highlight     enum ('y', 'n')                     default 'n'               null,
+    freeboard_comment_disabled enum ('y', 'n')                     default 'n'               null,
+    freeboard_author           int                                                           null,
+    freeboard_author_name      text                                                          null,
+    freeboard_author_grade     int                                                           null,
+    freeboard_author_ip        text                                                          null,
+    freeboard_author_agent     text                                                          null,
+    freeboard_related_betting  text                                                          null,
+    freeboard_subject          text                                                          null,
+    freeboard_content          text                                                          null,
+    freeboard_comment_count    int                                 default 0                 null,
+    freeboard_viewcount        int                                                           null
+);
+
+create index freeboard_author
+    on freeboard (freeboard_author);
+
+create index freeboard_sitename
+    on freeboard (freeboard_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_freeboard
+    before insert
+    on freeboard
+    for each row
+begin
+    if (new.freeboard_regstamp is null)
+    then
+        set new.freeboard_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table freeboard_comments
+(
+    freeboard_comments_regstamp     int                                null,
+    freeboard_comments_regdatetime  datetime default CURRENT_TIMESTAMP null,
+    freeboard_comments_article      int                                null,
+    freeboard_comments_author       int                                null,
+    freeboard_comments_author_name  text                               null,
+    freeboard_comments_author_grade int                                null,
+    freeboard_comments_author_ip    text                               null,
+    freeboard_comments_author_agent text                               null,
+    freeboard_comments_content      text                               null
+);
+
+create index freeboard_comments_article
+    on freeboard_comments (freeboard_comments_article);
+
+create definer = admin@`%` trigger trig_b_ins_freeboard_comments
+    before insert
+    on freeboard_comments
+    for each row
+begin
+    if (new.freeboard_comments_regstamp is null)
+    then
+        set new.freeboard_comments_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table leagues
+(
+    leagues_seq      int auto_increment
+        primary key,
+    leagues_id       int  null,
+    leagues_icon     text null,
+    leagues_name_en  text null,
+    leagues_name_kr1 text null,
+    leagues_name_kr2 text null,
+    constraint leagues_id
+        unique (leagues_id)
+);
+
+create table locations
+(
+    locations_seq      int auto_increment
+        primary key,
+    locations_id       int  null,
+    locations_icon     text null,
+    locations_name_en  text null,
+    locations_name_kr1 text null,
+    locations_name_kr2 text null,
+    constraint locations_id
+        unique (locations_id)
+);
+
+create table login_logs
+(
+    login_logs_seq         int auto_increment
+        primary key,
+    login_logs_sitename    varchar(50)                        null,
+    login_logs_regstamp    int                                null,
+    login_logs_regdatetime datetime default CURRENT_TIMESTAMP null,
+    login_logs_member      int                                null,
+    login_logs_type        enum ('성공', '실패')                  null,
+    login_logs_domain      text                               null,
+    login_logs_device_type enum ('pc', 'mobile')              null,
+    login_logs_agent       text                               null,
+    login_logs_ip          varchar(64)                        null,
+    login_logs_log         text                               null
+);
+
+create index login_logs_member
+    on login_logs (login_logs_member);
+
+create definer = admin@`%` trigger trig_b_ins_login_logs
+    before insert
+    on login_logs
+    for each row
+begin
+    if (new.login_logs_regstamp is null)
+    then
+        set new.login_logs_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table markets
+(
+    markets_seq      int auto_increment
+        primary key,
+    markets_id       int  null,
+    markets_icon     text null,
+    markets_name_en  text null,
+    markets_name_kr1 text null,
+    markets_name_kr2 text null,
+    constraint markets_id
+        unique (markets_id)
+);
+
+create table member_logs
+(
+    member_logs_seq             int auto_increment
+        primary key,
+    member_logs_sitename        varchar(50)                        null,
+    member_logs_regstamp        int                                null,
+    member_logs_regdatetime     datetime default CURRENT_TIMESTAMP null,
+    member_logs_member          int                                null,
+    member_logs_field_name      text                               null,
+    member_logs_field_value     text                               null,
+    member_logs_field_old_value text                               null,
+    member_logs_editor          int                                null
+);
+
+create definer = admin@`%` trigger trig_b_ins_member_logs
+    before insert
+    on member_logs
+    for each row
+begin
+    if (new.member_logs_regstamp is null)
+    then
+        set new.member_logs_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table members
+(
+    members_seq                           int auto_increment
+        primary key,
+    members_sitename                      varchar(50)                                                                                     null,
+    members_regstamp                      int                                                                                             null,
+    members_regdatetime                   datetime                                                              default CURRENT_TIMESTAMP null,
+    members_id                            varchar(50)                                                                                     null,
+    members_passwd                        text                                                                                            null,
+    members_passwd_hash_type              enum ('plain', 'mysql_password', 'mysql_old_password', 'md5', 'sha1') default 'mysql_password'  null,
+    members_passwd_change_stamp           int                                                                                             null,
+    members_cashout_passwd                text                                                                                            null,
+    members_cashout_bankname              text                                                                                            null,
+    members_cashout_account               text                                                                                            null,
+    members_cashout_owner                 text                                                                                            null,
+    members_nickname                      text                                                                                            null,
+    members_other_name                    text                                                                                            null,
+    members_phone                         text                                                                                            null,
+    members_grade                         int                                                                                             null,
+    members_type                          enum ('파트너', '회원', '일반관리자', '최고관리자', '정산제외회원')                        default '회원'              null,
+    members_parent                        int                                                                                             null,
+    members_approved_stamp                int                                                                                             null,
+    members_status                        enum ('대기', '정상', '차단', '탈퇴')                                         default '대기'              null,
+    members_is_black                      enum ('y', 'n')                                                       default 'n'               null,
+    members_inactive_stamp                int                                                                   default 0                 null,
+    members_inactive_reason               text                                                                                            null,
+    members_quit_stamp                    int                                                                   default 0                 null,
+    members_quit_reason                   text                                                                                            null,
+    members_ban_stamp                     int                                                                   default 0                 null,
+    members_ban_reason                    text                                                                                            null,
+    members_referer_code                  text                                                                                            null,
+    members_can_be_referer                enum ('y', 'n')                                                       default 'y'               null,
+    members_detail_setting                json                                                                                            null,
+    members_partner_setting               json                                                                                            null,
+    members_warn_setting                  json                                                                                            null,
+    members_access_allow_board            enum ('y', 'n')                                                       default 'y'               null,
+    members_access_allow_cscenter         enum ('y', 'n')                                                       default 'y'               null,
+    members_access_allow_referer          enum ('y', 'n')                                                       default 'y'               null,
+    members_join_ip                       text                                                                                            null,
+    members_join_agent                    text                                                                                            null,
+    members_join_referer_code             text                                                                                            null,
+    members_join_referer_seq              int                                                                   default 0                 null,
+    members_join_referer_origin_seq       int                                                                   default 0                 null,
+    members_join_referer_count            int                                                                   default 0                 null,
+    members_last_login_ip                 text                                                                                            null,
+    members_last_login_stamp              int                                                                   default 0                 null,
+    members_last_agent                    text                                                                                            null,
+    members_last_before_login_ip          text                                                                                            null,
+    members_last_before_login_stamp       int                                                                   default 0                 null,
+    members_last_before_agent             text                                                                                            null,
+    members_login_count                   int                                                                   default 0                 null,
+    members_login_ip                      longtext                                                                                        null,
+    members_recent_betting_date           datetime                                                                                        null,
+    members_recent_betting_amount         int                                                                   default 0                 null,
+    members_recent_deposit_date           datetime                                                                                        null,
+    members_recent_deposit_amount         int                                                                   default 0                 null,
+    members_recent_cashout_date           datetime                                                                                        null,
+    members_recent_cashout_amount         int                                                                   default 0                 null,
+    members_point                         int                                                                   default 0                 null,
+    members_mileage                       int                                                                   default 0                 null,
+    members_coin                          int                                                                   default 0                 null,
+    members_total_deposit_amount          int                                                                   default 0                 null,
+    members_total_deposit_count           int                                                                   default 0                 null,
+    members_total_cashout_amount          int                                                                   default 0                 null,
+    members_total_cashout_count           int                                                                   default 0                 null,
+    members_total_balance                 int                                                                   default 0                 null,
+    members_total_sports_betting_amount   int                                                                   default 0                 null,
+    members_total_sports_betting_count    int                                                                   default 0                 null,
+    members_total_minigame_betting_amount int                                                                   default 0                 null,
+    members_total_minigame_betting_count  int                                                                   default 0                 null,
+    members_total_casino_betting_amount   int                                                                   default 0                 null,
+    members_total_casino_betting_count    int                                                                   default 0                 null,
+    members_total_sports_prize_amount     int                                                                   default 0                 null,
+    members_total_sports_prize_count      int                                                                   default 0                 null,
+    members_total_minigame_prize_amount   int                                                                   default 0                 null,
+    members_total_minigame_prize_count    int                                                                   default 0                 null,
+    members_total_casino_prize_amount     int                                                                   default 0                 null,
+    members_total_casino_prize_count      int                                                                   default 0                 null,
+    members_authorization_code            text                                                                                            null
+);
+
+create index members_id
+    on members (members_id);
+
+create index members_parent
+    on members (members_parent);
+
+create index members_sitename
+    on members (members_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_members
+    before insert
+    on members
+    for each row
+begin
+    if (new.members_regstamp is null)
+    then
+        set new.members_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table members_grades
+(
+    members_grades_seq         int auto_increment
+        primary key,
+    members_grades_sitename    varchar(50)                        null,
+    members_grades_regstamp    int                                null,
+    members_grades_regdatetime datetime default CURRENT_TIMESTAMP null,
+    members_grades_sort_order  int                                null,
+    members_grades_name        text                               null,
+    members_grades_icon        text                               null,
+    members_grades_content     json                               null
+);
+
+create definer = admin@`%` trigger trig_b_ins_members_grades
+    before insert
+    on members_grades
+    for each row
+begin
+    if (new.members_grades_regstamp is null)
+    then
+        set new.members_grades_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table members_memo
+(
+    members_memo_seq         int auto_increment
+        primary key,
+    members_memo_regstamp    int                                null,
+    members_memo_regdatetime datetime default CURRENT_TIMESTAMP null,
+    members_memo_author      int                                null,
+    members_memo_member      int                                null,
+    members_memo_subject     text                               null,
+    members_memo_content     text                               null
+);
+
+create index members_memo_member
+    on members_memo (members_memo_member);
+
+create definer = admin@`%` trigger trig_b_ins_members_memo
+    before insert
+    on members_memo
+    for each row
+begin
+    if (new.members_memo_regstamp is null)
+    then
+        set new.members_memo_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table minigames_betting
+(
+    minigames_betting_seq            int,
+    minigames_betting_regstamp       int                                                                                                not null,
+    minigames_betting_regdatetime    datetime default CURRENT_TIMESTAMP                                                                 not null,
+    minigames_betting_member         int                                                                                                not null comment '베팅회원 seq',
+    minigames_betting_ip             int                                                                                                not null comment '베팅회원 ip',
+    minigames_betting_status         enum ('대기', '마감(미결과)', '마감(결과)', '환급', '적특')                                                       not null comment '베팅 상태',
+    minigames_betting_game_name      enum ('powerball', 'powerladder', 'kenoladder', 'powerfreekick', 'speedhomerun', 'powerspeeddunk') not null,
+    minigames_betting_rule_name      text                                                                                               not null comment '베팅한 룰 이름',
+    minigames_betting_rule_odds      text                                                                                               not null comment '베팅시 배당 ',
+    minigames_betting_betside        text                                                                                               not null comment '베팅 사이드',
+    minigames_betting_gameno         int                                                                                                not null comment '게임 회차',
+    minigames_betting_betamount      int                                                                                                not null comment '베팅 금액',
+    minigames_betting_expected_prize int                                                                                                not null comment '적중 시 예상 금액',
+    minigames_betting_exception      enum ('y', 'n')                                                                                    not null comment '적특처리',
+    minigames_betting_result         enum ('대기', '적중', '적특', '미적중')                                                                     not null comment '결과상태'
+)
+    collate = utf8_unicode_ci;
+
+create index minigames_betting_seq
+    on minigames_betting (minigames_betting_seq);
+
+create definer = admin@`%` trigger trig_b_ins_minigames_betting
+    before insert
+    on minigames_betting
+    for each row
+begin
+    if (new.minigames_betting_regstamp is null)
+    then
+        set new.minigames_betting_regstamp = unix_timestamp();
+    end if;
+end;
+
+alter table minigames_betting
+    modify minigames_betting_seq int auto_increment;
+
+create table minigames_games
+(
+    minigames_games_seq            int,
+    minigames_games_regstamp       int                                                                                                null,
+    minigames_games_regdatetime    datetime                                               default CURRENT_TIMESTAMP                   not null,
+    minigames_games_status         enum ('대기', '베팅', '마감(미결과)', '마감(결과)', '마감(환급)', '취소') default '대기'                                not null,
+    minigames_games_game_name      enum ('powerball', 'powerladder', 'kenoladder', 'powerfreekick', 'speedhomerun', 'powerspeeddunk') not null,
+    minigames_games_playstamp      int                                                                                                not null,
+    minigames_games_playdatetime   datetime                                                                                           not null,
+    minigames_games_gameno         int                                                                                                not null comment '회차',
+    minigames_games_exception      enum ('y', 'n')                                        default 'n'                                 not null comment '적중처리',
+    minigames_games_betcount       int                                                    default 0                                   not null comment '베팅횟수',
+    minigames_games_betcount_win   int                                                    default 0                                   not null comment '적중횟수',
+    minigames_games_betcount_lose  int                                                    default 0                                   not null comment '미적중횟수',
+    minigames_games_betamount      int                                                    default 0                                   not null comment '베팅금액',
+    minigames_games_betamount_win  int                                                    default 0                                   not null comment '적중금액',
+    minigames_games_betamount_lose int                                                    default 0                                   not null comment '미적중금액',
+    minigames_games_result         text                                                                                               null comment '결과값'
+)
+    collate = utf8_unicode_ci;
+
+create index minigames_games_seq
+    on minigames_games (minigames_games_seq);
+
+create definer = admin@`%` trigger trig_b_ins_minigames_game
+    before insert
+    on minigames_games
+    for each row
+begin
+    if (new.minigames_games_regstamp is null)
+    then
+        set new.minigames_games_regstamp = unix_timestamp();
+    end if;
+end;
+
+alter table minigames_games
+    modify minigames_games_seq int auto_increment;
+
+create table notes
+(
+    notes_seq         int auto_increment
+        primary key,
+    notes_sitename    varchar(50)                               null,
+    notes_regstamp    int                                       null,
+    notes_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    notes_enabled     enum ('y', 'n') default 'y'               null,
+    notes_author      int                                       null,
+    notes_author_name text                                      null,
+    notes_member      int                                       null,
+    notes_subject     text                                      null,
+    notes_content     text                                      null,
+    notes_readstamp   int                                       null
+);
+
+create index notes_regdatetime
+    on notes (notes_regdatetime);
+
+create definer = admin@`%` trigger trig_b_ins_notes
+    before insert
+    on notes
+    for each row
+begin
+    if (new.notes_regstamp is null)
+    then
+        set new.notes_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table notice
+(
+    notice_seq              int auto_increment
+        primary key,
+    notice_sitenames        text                                      null,
+    notice_regstamp         int                                       null,
+    notice_regdatetime      datetime        default CURRENT_TIMESTAMP null,
+    notice_fakedatetime     datetime        default CURRENT_TIMESTAMP null,
+    notice_color            varchar(7)                                null,
+    notice_enabled          enum ('y', 'n') default 'y'               null,
+    notice_is_notice        enum ('y', 'n') default 'n'               null,
+    notice_is_highlight     enum ('y', 'n') default 'n'               null,
+    notice_comment_disabled enum ('y', 'n') default 'n'               null,
+    notice_author           int                                       null,
+    notice_author_name      text                                      null,
+    notice_author_grade     int                                       null,
+    notice_author_ip        text                                      null,
+    notice_author_agent     text                                      null,
+    notice_subject          text                                      null,
+    notice_content          text                                      null,
+    notice_comment_count    int             default 0                 null,
+    notice_viewcount        int                                       null
+);
+
+create index notice_author
+    on notice (notice_author);
+
+create definer = admin@`%` trigger trig_b_ins_notice
+    before insert
+    on notice
+    for each row
+begin
+    if (new.notice_regstamp is null)
+    then
+        set new.notice_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table notice_category
+(
+    notice_category_seq         int auto_increment
+        primary key,
+    notice_category_sitename    varchar(50)                               null,
+    notice_category_regstamp    int                                       null,
+    notice_category_regdatetime datetime        default CURRENT_TIMESTAMP null,
+    notice_category_author      int                                       null,
+    notice_category_name        varchar(25)                               null,
+    notice_category_enabled     enum ('y', 'n') default 'y'               null,
+    notice_category_order       int                                       null
+);
+
+create index notice_category_name
+    on notice_category (notice_category_name);
+
+create index notice_category_sitename
+    on notice_category (notice_category_sitename);
+
+create definer = admin@`%` trigger trig_b_ins_notice_category
+    before insert
+    on notice_category
+    for each row
+begin
+    if (new.notice_category_regstamp is null)
+    then
+        set new.notice_category_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table notice_comments
+(
+    notice_comments_regstamp     int                                null,
+    notice_comments_regdatetime  datetime default CURRENT_TIMESTAMP null,
+    notice_comments_article      int                                null,
+    notice_comments_author       int                                null,
+    notice_comments_author_name  text                               null,
+    notice_comments_author_grade int                                null,
+    notice_comments_author_ip    text                               null,
+    notice_comments_author_agent text                               null,
+    notice_comments_content      text                               null
+);
+
+create index notice_comments_article
+    on notice_comments (notice_comments_article);
+
+create definer = admin@`%` trigger trig_b_ins_notice_comments
+    before insert
+    on notice_comments
+    for each row
+begin
+    if (new.notice_comments_regstamp is null)
+    then
+        set new.notice_comments_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table popup
+(
+    popup_seq          int auto_increment
+        primary key,
+    popup_sitenames    text                                      null,
+    popup_regstamp     int                                       null,
+    popup_regdatetime  datetime        default CURRENT_TIMESTAMP null,
+    popup_enabled      enum ('y', 'n') default 'y'               null,
+    popup_author       int                                       null,
+    popup_author_ip    text                                      null,
+    popup_author_agent text                                      null,
+    popup_startdate    datetime                                  null,
+    popup_enddate      datetime                                  null,
+    popup_subject      text                                      null,
+    popup_order        int                                       null,
+    popup_image        text                                      null
+);
+
+create index popup_enddate
+    on popup (popup_enddate);
+
+create index popup_startdate
+    on popup (popup_startdate);
+
+create definer = admin@`%` trigger trig_b_ins_popup
+    before insert
+    on popup
+    for each row
+begin
+    if (new.popup_regstamp is null)
+    then
+        set new.popup_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table sites
+(
+    sites_seq      int auto_increment
+        primary key,
+    sites_name     varchar(30) null,
+    sites_settings json        null,
+    sites_member   int         null
+);
+
+create table sports
+(
+    sports_seq      int auto_increment
+        primary key,
+    sports_id       int  null,
+    sports_icon     text null,
+    sports_name_en  text null,
+    sports_name_kr1 text null,
+    sports_name_kr2 text null,
+    constraint sports_id
+        unique (sports_id)
+);
+
+create table spot
+(
+    spot_seq              int auto_increment
+        primary key,
+    spot_sitename         text                                      null,
+    spot_regstamp         int                                       null,
+    spot_regdatetime      datetime        default CURRENT_TIMESTAMP null,
+    spot_facedatetime     datetime        default CURRENT_TIMESTAMP null,
+    spot_color            varchar(7)                                null,
+    spot_enabled          enum ('y', 'n') default 'y'               null,
+    spot_is_spot          enum ('y', 'n') default 'n'               null,
+    spot_is_highlight     enum ('y', 'n') default 'n'               null,
+    spot_comment_disabled enum ('y', 'n') default 'n'               null,
+    spot_startdate        datetime                                  null,
+    spot_enddate          datetime                                  null,
+    spot_author           int                                       null,
+    spot_author_ip        text                                      null,
+    spot_author_agent     text                                      null,
+    spot_subject          text                                      null,
+    spot_content          text                                      null,
+    spot_comment_count    int             default 0                 null,
+    spot_viewcount        int                                       null
+);
+
+create index spot_author
+    on spot (spot_author);
+
+create definer = admin@`%` trigger trig_b_ins_spot
+    before insert
+    on spot
+    for each row
+begin
+    if (new.spot_regstamp is null)
+    then
+        set new.spot_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table spot_comments
+(
+    spot_comments_regstamp     int                                null,
+    spot_comments_regdatetime  datetime default CURRENT_TIMESTAMP null,
+    spot_comments_article      int                                null,
+    spot_comments_author       int                                null,
+    spot_comments_author_name  text                               null,
+    spot_comments_author_grade int                                null,
+    spot_comments_author_ip    text                               null,
+    spot_comments_author_agent text                               null,
+    spot_comments_content      text                               null
+);
+
+create index spot_comments_article
+    on spot_comments (spot_comments_article);
+
+create definer = admin@`%` trigger trig_b_ins_spot_comments
+    before insert
+    on spot_comments
+    for each row
+begin
+    if (new.spot_comments_regstamp is null)
+    then
+        set new.spot_comments_regstamp = unix_timestamp();
+    end if;
+end;
+
+create table teams
+(
+    teams_seq      int auto_increment
+        primary key,
+    teams_id       int  null,
+    teams_icon     text null,
+    teams_name_en  text null,
+    teams_name_kr1 text null,
+    teams_name_kr2 text null,
+    constraint teams_id
+        unique (teams_id)
+);
+

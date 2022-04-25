@@ -1,0 +1,487 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { Interval } from '@nestjs/schedule';
+import { In, MoreThan } from 'typeorm';
+import moment from 'moment';
+
+import { CrawlerService } from '../../crawler/crawler.service';
+import { TeamsService } from '../../core/teams/teams.service';
+// import { LocationsService } from '../../core/locations/locations.service';
+// import { SportsService } from '../../core/sports/sports.service';
+
+import { CacheService } from '../../cache/cache.service';
+import { GameService } from '../../core/game/game.service';
+// import { SitesService } from '../../core/sites/sites.service';
+// import { MarketsService } from '../../core/markets/markets.service';
+
+@Injectable()
+export class GetGameService {
+  private readonly logger = new Logger(GetGameService.name);
+
+  constructor(
+    private teamsService: TeamsService,
+    private crawlerService: CrawlerService,
+    private gameService: GameService,
+    // private locationsService: LocationsService,
+    // private sportsService: SportsService,
+    private cacheService: CacheService, // private sitesService: SitesService, // private marketsService: MarketsService,
+  ) {}
+
+  // 게임 정보 가져오기
+  @Interval(300000)
+  async getGames() {
+    this.logger.log('게임정보 크롤링 시작');
+    const teams = await this.teamsService.findAll();
+    const result = await this.crawlerService.usedFilterByGames();
+
+    const data = result.data;
+    const teamsInsertQuery = [];
+    const gameInsertQuery = [];
+    // const gameUpdateQuery = [];
+
+    // 1. 게임정보 요청
+    // 2. 게임정보 아이디만 정렬
+    // 3. 데이터베이스에서 게임 정보를 한번에 불러온다
+    if (data.Body) {
+      // 게임 경기들
+      const games = data.Body;
+      const gameIds = games.map((e) => e.FixtureId);
+      const reqAllGame = await this.gameService.findAll({
+        where: {
+          game_id: In(gameIds),
+          // game_starttime: MoreThan(
+          //   moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
+          // ),
+        },
+        // relations: ['home_team', 'away_team', 'league', 'sport', 'location'],
+      });
+      for (const g in games) {
+        const 게임 = games[g];
+        const targetGame = reqAllGame.find(
+          (e) => Number(e.game_id) === 게임.FixtureId,
+        );
+        const gameStatus = this.crawlerService.gameStatus(게임.Fixture.Status);
+
+        // 해당경기가 DB에 있을ㄷ시
+        if (!targetGame) {
+          /*
+          DB에 경기가 없을시
+          해당경기를 생성
+           *  */
+          const homeTeam = 게임.Fixture.Participants.find(
+            (e) => e.Position === '1',
+          );
+
+          const awayTeam = 게임.Fixture.Participants.find(
+            (e) => e.Position === '2',
+          );
+          const homeTeams = teams.find((e) => e.teams_id === homeTeam.Id);
+          if (!homeTeams) {
+            teamsInsertQuery.push({
+              teams_id: homeTeam.Id,
+              teams_name_en: homeTeam.Name,
+            });
+          }
+
+          const awayTeams = teams.find((e) => e.teams_id === awayTeam.Id);
+          if (!awayTeams) {
+            teamsInsertQuery.push({
+              teams_id: awayTeam.Id,
+              teams_name_en: awayTeam.Name,
+            });
+          }
+
+          gameInsertQuery.push({
+            game_id: 게임.FixtureId,
+            game_sport: 게임.Fixture.Sport.Id,
+            game_location: 게임.Fixture.Location.Id,
+            game_league: 게임.Fixture.League.Id,
+            game_starttime: moment(게임.Fixture.StartDate)
+              .add(9, 'hours')
+              .format('YYYY-MM-DD HH:mm:ss'),
+            game_home_team: homeTeam.Id,
+            game_away_team: awayTeam.Id,
+            game_status: gameStatus,
+            game_sites: '',
+          });
+        }
+      }
+    }
+
+    await Promise.all([
+      await this.gameService.insertMany(gameInsertQuery),
+      await this.teamsService.insertMany(teamsInsertQuery),
+      // await this.gameService.updateBulk(gameUpdateQuery),
+    ]);
+  }
+
+  // 게임 정보 가져오기
+  @Interval(300000)
+  async insertGameList() {
+    this.logger.log('게임정보 입력 시작');
+    let gameList: any = await this.cacheService.getKey('gameList');
+
+    if (!gameList) gameList = [];
+
+    // 1. 게임정보 요청
+    // 2. 게임정보 아이디만 정렬
+    // 3. 데이터베이스에서 게임 정보를 한번에 불러온다
+    const reqAllGame = await this.gameService.findAll({
+      where: {
+        game_status: '대기',
+        game_type: '스포츠',
+        game_starttime: MoreThan(
+          moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'),
+        ),
+      },
+      relations: ['home_team', 'away_team', 'league', 'sport', 'location'],
+    });
+
+    for (const g in reqAllGame) {
+      const 게임 = reqAllGame[g];
+      const targetGame = gameList.find((e) => e.game_id === 게임.game_id);
+      // REDIS 해당경기가 DB에 있을시
+      if (!targetGame) {
+        gameList.push(게임);
+      }
+    }
+    // console.log(gameList);
+    // await this.cacheService.delKey('gameList');
+    await this.cacheService.setKey('gameList', gameList);
+
+    // await this.cacheService.setKey('gameList', gameList, { ttl: 3600000 });
+  }
+
+  // 인메모리에 게임 정보등록
+  @Interval(60000)
+  async inMemoryGetFolders() {
+    this.logger.log('게임정보에 폴더입력 시작');
+
+    // let gameList: any = await this.cacheService.getKey('gameList');
+    // if (!gameList) gameList = [];
+    const result = await this.crawlerService.usedFilterByFolders();
+    // 1. API 요청
+    // 2. 해당 경기ID 들로 게임(폴더, 벳츠) 검색
+    // 3. 해당 폴더가 있는지 검색
+    const data = result.data;
+    if (data.Body) {
+      const games = data.Body;
+      const gamesId = games.map((e) => e.FixtureId);
+
+      const dbData = await this.gameService.findAll({
+        where: {
+          game_id: In(gamesId),
+        },
+        relations: ['folders', 'folders.bets'],
+      });
+      for (const g in games) {
+        const 게임 = games[g];
+
+        // 인메모리에서 게임 정보 있으면 redis에 입력
+        const listItem = dbData.find(
+          (e) => Number(e.game_id) === 게임.FixtureId,
+        );
+        // 레디스에 해당 정보가 있을때
+        if (listItem) {
+          const 스페셜마켓 = [21, 41, 42, 41, 64, 235, 236, 281, 202];
+          if (게임.Markets) {
+            // 마켓데이터 순회
+            // 마켓은 = 폴더
+            const 마켓들 = 게임.Markets;
+            for (const m in 마켓들) {
+              const 마켓 = 마켓들[m];
+              const 타입 =
+                스페셜마켓.indexOf(마켓.Id) === -1 ? '프리매치' : '스페셜';
+              const 제공업체들 = 마켓.Providers;
+
+              if (!listItem.folders) {
+                listItem.folders = [];
+              }
+
+              // 게임리스트에서 해당게임이있는지 있으면 folders에 입력
+              for (const p in 제공업체들) {
+                const 제공업체 = 제공업체들[p];
+                if (마켓.Name.indexOf('1X2') !== -1) {
+                  const bets = [];
+                  let folderStatus = null;
+
+                  const 승 = 제공업체.Bets.find((e) => e.Name === '1');
+                  const 무 = 제공업체.Bets.find((e) => e.Name === 'X');
+                  const 패 = 제공업체.Bets.find((e) => e.Name === '2');
+                  // console.log(승, 패, 무);
+                  folderStatus = 승.Status;
+                  folderStatus = 승 ? 승.Status : 패 ? 패.Status : 무.Status;
+
+                  for (const b in 제공업체.Bets) {
+                    if (승 && 무 && 패) {
+                      const det = {
+                        bets_id: 제공업체.Bets[b].Id,
+                        bets_name: 제공업체.Bets[b].Name,
+                        bets_line: null,
+                        bets_status: 제공업체.Bets[b].Status,
+                        bets_price: Number(제공업체.Bets[b].Price).toFixed(2),
+                        bets_start_price: 제공업체.Bets[b].StartPrice,
+                        bets_settlement: 제공업체.Bets[b].Settlement
+                          ? this.crawlerService.betSettlement(
+                              제공업체.Bets[b].Settlement,
+                            )
+                          : 'wait',
+                      };
+                      bets.push(det);
+                    }
+                  }
+
+                  const folder = listItem.folders.find(
+                    (e) =>
+                      e.folders_market === 마켓.Id &&
+                      e.folders_bookmaker === 제공업체.Id,
+                  );
+                  if (folder) {
+                    folder.folders_status = folderStatus;
+                    bets.map((e) => {
+                      e.bets_folder = folder.folders_id;
+                    });
+                    folder.bets = bets;
+                  } else {
+                    const newFolder: any = {
+                      folders_id: `${게임.FixtureId}${마켓.Id}${제공업체.Id}${
+                        제공업체.Id
+                      }${Math.floor(Math.random() * 100000)}`,
+                      folders_game: 게임.FixtureId,
+                      folders_market: 마켓.Id,
+                      folders_bookmaker: 제공업체.Id,
+                      folders_type: 타입,
+                      folders_status: folderStatus,
+                      markets: { markets_name_en: 마켓.Name },
+                      folders_sites: '',
+                    };
+                    bets.map((e) => {
+                      e.bets_folder = newFolder.folders_id;
+                    });
+                    newFolder.bets = bets;
+                    listItem.folders.push(newFolder);
+                  }
+                }
+                if (마켓.Name.indexOf('12') !== -1) {
+                  const bets = [];
+                  let folderStatus = null;
+
+                  const 승 = 제공업체.Bets.find((e) => e.Name === '1');
+                  const 패 = 제공업체.Bets.find((e) => e.Name === '2');
+                  folderStatus = 승 ? 승.Status : 패.Status;
+
+                  for (const b in 제공업체.Bets) {
+                    if (승 && 패) {
+                      const det = {
+                        bets_id: 제공업체.Bets[b].Id,
+                        bets_name: 제공업체.Bets[b].Name,
+                        bets_line: null,
+                        bets_status: 제공업체.Bets[b].Status,
+                        bets_price: Number(제공업체.Bets[b].Price).toFixed(2),
+                        bets_start_price: 제공업체.Bets[b].StartPrice,
+                        bets_settlement: 제공업체.Bets[b].Settlement
+                          ? this.crawlerService.betSettlement(
+                              제공업체.Bets[b].Settlement,
+                            )
+                          : 'wait',
+                      };
+                      bets.push(det);
+                    }
+                  }
+
+                  const folder = listItem.folders.find(
+                    (e) =>
+                      e.folders_market === 마켓.Id &&
+                      e.folders_bookmaker === 제공업체.Id,
+                  );
+
+                  if (folder) {
+                    folder.folders_status = folderStatus;
+                    bets.map((e) => {
+                      e.bets_folder = folder.folders_id;
+                    });
+                    folder.bets = bets;
+                  } else {
+                    const newFolder = {
+                      folders_id: `${게임.FixtureId}${마켓.Id}${제공업체.Id}${
+                        제공업체.Id
+                      }${Math.floor(Math.random() * 100000)}`,
+                      folders_game: 게임.FixtureId,
+                      folders_market: 마켓.Id,
+                      folders_bookmaker: 제공업체.Id,
+                      folders_type: 타입,
+                      folders_status: folderStatus,
+                      markets: { markets_name_en: 마켓.Name },
+                      bets,
+                      folders_sites: '',
+                    };
+                    bets.map((e) => {
+                      e.bets_folder = newFolder.folders_id;
+                    });
+                    newFolder.bets = bets;
+                    listItem.folders.push(newFolder);
+                  }
+                }
+                if (마켓.Name.indexOf('Handicap') !== -1) {
+                  let 기준점s = 제공업체.Bets.map((e) => e.BaseLine);
+                  기준점s = Array.from(new Set(기준점s));
+                  for (const ki in 기준점s) {
+                    let foldersStatus = null;
+                    const bets = [];
+                    const 기준점 = 기준점s[ki];
+                    if (
+                      기준점.indexOf('.25') === -1 &&
+                      기준점.indexOf('.75') === -1
+                    ) {
+                      const 배당 = 제공업체.Bets.filter(
+                        (e) => e.BaseLine === 기준점,
+                      );
+                      // console.log(배당, 123);
+                      const home = 배당.find((e) => e.Name === '1');
+                      const away = 배당.find((e) => e.Name === '2');
+
+                      foldersStatus = home ? home.Status : away.Status;
+                      for (const b in 배당) {
+                        if (home && away) {
+                          const det = {
+                            bets_id: 배당[b].Id,
+                            bets_name: 배당[b].Name,
+                            bets_line: 기준점,
+                            bets_status: 배당[b].Status,
+                            bets_price: Number(제공업체.Bets[b].Price).toFixed(
+                              2,
+                            ),
+                            bets_start_price: 제공업체.Bets[b].StartPrice,
+                            bets_settlement: 배당[b].Settlement
+                              ? this.crawlerService.betSettlement(
+                                  배당[b].Settlement,
+                                )
+                              : 'wait',
+                          };
+                          bets.push(det);
+                        }
+                      }
+
+                      const folder = listItem.folders.find(
+                        (e) =>
+                          e.folders_market === 마켓.Id &&
+                          e.folders_bookmaker === 제공업체.Id &&
+                          e.folders_line === 기준점,
+                      );
+
+                      if (folder) {
+                        bets.map((e) => {
+                          e.bets_folder = folder.folders_id;
+                        });
+                        folder.folders_status = foldersStatus;
+                        folder.bets = bets;
+                      } else {
+                        const newFolder: any = {
+                          folders_id: `${게임.FixtureId}${마켓.Id}${
+                            제공업체.Id
+                          }${제공업체.Id}${Math.floor(Math.random() * 100000)}`,
+                          folders_game: 게임.FixtureId,
+                          folders_market: 마켓.Id,
+                          folders_bookmaker: 제공업체.Id,
+                          folders_type: 타입,
+                          folders_line: 기준점,
+                          folders_status: foldersStatus,
+                          markets: { markets_name_en: 마켓.Name },
+                          folders_sites: '',
+                        };
+                        bets.map((e) => {
+                          e.bets_folder = newFolder.folders_id;
+                        });
+                        newFolder.bets = bets;
+                        listItem.folders.push(newFolder);
+                      }
+                    }
+                  }
+                }
+                if (마켓.Name.indexOf('Under/Over') !== -1) {
+                  let 기준점s = 제공업체.Bets.map((e) => e.BaseLine);
+                  기준점s = Array.from(new Set(기준점s));
+                  let foldersStatus = null;
+                  for (const ki in 기준점s) {
+                    const bets = [];
+                    const 기준점 = 기준점s[ki];
+                    const 배당 = 제공업체.Bets.filter(
+                      (e) => e.BaseLine === 기준점,
+                    );
+                    const home = 배당.find((e) => e.Name === 'Over');
+                    const away = 배당.find((e) => e.Name === 'Under');
+                    // console.log(배당, 456);
+                    foldersStatus = home ? home.Status : away.Status;
+
+                    if (home && away) {
+                      for (const b in 배당) {
+                        if (
+                          home &&
+                          away &&
+                          home.Price !== '1.00' &&
+                          away.Price !== '1.00'
+                        ) {
+                          // console.log(배당[b], 배당[b].Status, 4567);
+
+                          const det = {
+                            bets_id: 배당[b].Id,
+                            bets_name: 배당[b].Name,
+                            bets_line: 기준점,
+                            bets_status: 배당[b].Status,
+                            bets_price: Number(배당[b].Price).toFixed(2),
+                            bets_start_price: 제공업체.Bets[b].StartPrice,
+                            bets_settlement: 배당[b].Settlement
+                              ? this.crawlerService.betSettlement(
+                                  배당[b].Settlement,
+                                )
+                              : 'wait',
+                          };
+                          bets.push(det);
+                        }
+                      }
+
+                      const folder = listItem.folders.find(
+                        (e) =>
+                          e.folders_market === 마켓.Id &&
+                          e.folders_bookmaker === 제공업체.Id &&
+                          e.folders_line === 기준점,
+                      );
+
+                      if (folder) {
+                        bets.map((e) => {
+                          e.bets_folder = folder.folders_id;
+                        });
+                        folder.folders_status = foldersStatus;
+                        folder.bets = bets;
+                      } else {
+                        const newFolder: any = {
+                          folders_id: `${게임.FixtureId}${마켓.Id}${
+                            제공업체.Id
+                          }${제공업체.Id}${Math.floor(Math.random() * 100000)}`,
+                          folders_game: 게임.FixtureId,
+                          folders_market: 마켓.Id,
+                          folders_bookmaker: 제공업체.Id,
+                          folders_type: 타입,
+                          folders_line: 기준점,
+                          folders_status: foldersStatus,
+                          markets: { markets_name_en: 마켓.Name },
+                          folders_sites: '',
+                        };
+                        bets.map((e) => {
+                          e.bets_folder = newFolder.folders_id;
+                        });
+                        newFolder.bets = bets;
+                        listItem.folders.push(newFolder);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    // await this.cacheService.delKey('gameList');
+    await this.cacheService.setKey('gameList', gameList);
+  }
+}
