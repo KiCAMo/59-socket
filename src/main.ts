@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 // import { SocketIoAdapter } from './adapters/socket-io.adapters';
-// import { RedisIoAdapter } from './adapters/redis-io.adapter';
+import { RedisIoAdapter } from './adapters/redis-io.adapter';
 
 import config from 'config';
 import { json, urlencoded } from 'body-parser';
@@ -20,7 +20,7 @@ async function bootstrap() {
   };
   app.enableCors(options);
   // app.useWebSocketAdapter(new SocketIoAdapter(app));
-  // app.useWebSocketAdapter(new RedisIoAdapter(app));
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
 
   app.use(json({ limit: appSettings.bodyLimit }));
   app.use(
