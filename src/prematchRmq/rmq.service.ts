@@ -118,7 +118,7 @@ export class RmqService implements OnModuleInit {
                   gameId: null,
                   gameStatus: null,
                   marketId: null,
-                  providerId: null,
+                  bookmakerId: null,
                   score: null,
                   odds: [],
                 };
@@ -166,7 +166,7 @@ export class RmqService implements OnModuleInit {
                           const 마켓ID = marketId;
                           const 제공업체 = provider;
                           data.marketId = 마켓ID;
-                          data.providerId = 제공업체.Id;
+                          data.bookmakerId = 제공업체.Id;
                           for (const b in provider.Bets) {
                             const bets = provider.Bets[b];
                             const updated = {
