@@ -107,7 +107,6 @@ export class RmqService implements OnModuleInit {
           '_4078_',
           async (msg: Message) => {
             const JsonMsg = JSON.parse(msg.content.toString());
-            const bookmakers = [4, 8, 13, 74, 145];
             if (JsonMsg.Body) {
               const jsonData = JsonMsg.Body;
               if (jsonData.Events) {
@@ -151,6 +150,11 @@ export class RmqService implements OnModuleInit {
                   // }
 
                   const markets = events[i].Markets;
+                  const bookmakers = [4, 8, 13, 74, 145];
+                  const selectedMarkets = [
+                    1, 2, 3, 21, 28, 41, 42, 52, 64, 165, 202, 226, 235, 236,
+                    281, 342, 866, 1558,
+                  ];
                   if (markets) {
                     for (const j in markets) {
                       // 마켓아이디 추가
@@ -180,7 +184,12 @@ export class RmqService implements OnModuleInit {
                         }
                       }
                     }
-                    this.socket.allUserSend({ name: 'prematch', data });
+                    if (
+                      selectedMarkets.indexOf(data.marketId) !== -1 &&
+                      bookmakers.indexOf(data.bookmakerId) !== -1
+                    ) {
+                      this.socket.allUserSend({ name: 'prematch', data });
+                    }
                   }
                 }
               }
