@@ -127,7 +127,7 @@ export class RmqService implements OnModuleInit {
                   const gameId = events[i].FixtureId;
                   const 게임ID = String(gameId);
                   data.gameId = 게임ID;
-
+                  console.log(events[i]);
                   // 경기상태에대한 정보
                   if (events[i].Fixture) {
                     data.gameStatus = events[i].Fixture.Status;
