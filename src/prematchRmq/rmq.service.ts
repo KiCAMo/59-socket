@@ -172,8 +172,10 @@ export class RmqService implements OnModuleInit {
                             const bets = provider.Bets[b];
                             const updated = {
                               bets_id: bets.Id,
+                              bets_name: bets.Name,
                               bet_price: bets.Price,
                               bet_status: bets.Status,
+                              bet_line: bets.BaseLine ? bets.BaseLine : null,
                             };
                             data.odds.push(updated);
                           }
