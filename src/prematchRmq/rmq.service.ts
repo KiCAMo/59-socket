@@ -113,7 +113,7 @@ export class RmqService implements OnModuleInit {
               if (jsonData.Events) {
                 const events = jsonData.Events;
                 // 업데이트를 위한 구조화
-
+                // console.log(events);
                 const data = {
                   gameId: null,
                   gameStatus: null,
@@ -134,27 +134,27 @@ export class RmqService implements OnModuleInit {
                   }
 
                   // 경기 스코어 대한 정보
-                  if (events[i].Livescore) {
-                    const score: any = {};
-                    score.period = events[i].Livescore.Scoreboard.CurrentPeriod;
-                    score.time = events[i].Livescore.Scoreboard.Time;
-                    // data.score.home =
-                    const home = events[i].Livescore.Scoreboard.Results.find(
-                      (e) => e.Position === '1',
-                    );
-                    const away = events[i].Livescore.Scoreboard.Results.find(
-                      (e) => e.Position === '2',
-                    );
-                    score.home = home.Value;
-                    score.away = away.Value;
-                    data.score = score;
-                    this.socket.allUserSend({ name: 'score', data });
-                  }
+                  // if (events[i].Livescore) {
+                  //   const score: any = {};
+                  //   score.period = events[i].Livescore.Scoreboard.CurrentPeriod;
+                  //   score.time = events[i].Livescore.Scoreboard.Time;
+                  //   // data.score.home =
+                  //   const home = events[i].Livescore.Scoreboard.Results.find(
+                  //     (e) => e.Position === '1',
+                  //   );
+                  //   const away = events[i].Livescore.Scoreboard.Results.find(
+                  //     (e) => e.Position === '2',
+                  //   );
+                  //   score.home = home.Value;
+                  //   score.away = away.Value;
+                  //   data.score = score;
+                  //   this.socket.allUserSend({ name: 'score', data });
+                  // }
 
                   const markets = events[i].Markets;
                   if (markets) {
                     for (const j in markets) {
-                      // console.log(markets[j]);
+                      console.log(markets[j]);
                       // 마켓아이디 추가
                       const marketId = markets[j].Id;
                       const providers = markets[j].Providers;
@@ -180,7 +180,7 @@ export class RmqService implements OnModuleInit {
                         }
                       }
                     }
-                    this.socket.allUserSend({ name: 'inplay', data });
+                    this.socket.allUserSend({ name: 'prematch', data });
                   }
                 }
               }
