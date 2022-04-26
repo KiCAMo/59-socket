@@ -154,7 +154,6 @@ export class RmqService implements OnModuleInit {
                   const markets = events[i].Markets;
                   if (markets) {
                     for (const j in markets) {
-                      console.log(markets[j]);
                       // 마켓아이디 추가
                       const marketId = markets[j].Id;
                       const providers = markets[j].Providers;
