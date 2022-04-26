@@ -10,24 +10,13 @@ import { RMQ_MODULE_OPTIONS } from './rmq.constants';
 import { RmqExplorer } from './rmq.explorer';
 import { RmqService } from './rmq.service';
 import { SocketModule } from '../socket/socket.module';
-import { CoreModule } from '../core/core.module';
-import { CrawlerModule } from '../crawler/crawler.module';
-
-import { RedisCacheModule } from '../cache/cache.module';
 
 // import { RmqRecieveService } from './services/recieve.service';
 
 const rabbit_settings = config.get<IRabbitMQSettings>('RABBITMQ_SETTINGS');
 
 @Module({
-  imports: [
-    DiscoveryModule,
-    MetadataScanner,
-    SocketModule,
-    RedisCacheModule,
-    CoreModule,
-    CrawlerModule,
-  ],
+  imports: [DiscoveryModule, MetadataScanner, SocketModule],
   providers: [
     {
       provide: LoggerService,

@@ -28,9 +28,7 @@ import {
 
 import config from 'config';
 import axios from 'axios';
-import { CacheService } from '../cache/cache.service';
 import { SocketGateway } from '../socket/socket.gateway';
-import { CrawlerService } from '../crawler/crawler.service';
 
 // import { FoldersService } from '../core/folders/folders.service';
 const appSettings = config.get<IRabbitMQSettings>('RABBITMQ_SETTINGS');
@@ -46,9 +44,7 @@ export class RmqService implements OnModuleInit {
   constructor(
     @Inject(RMQ_MODULE_OPTIONS) private readonly options: IRMQModuleOptions,
     private readonly logger: LoggerService,
-    private crawlerService: CrawlerService,
     private socket: SocketGateway,
-    private cacheService: CacheService, // private foldersService: FoldersService,
   ) {}
 
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
@@ -112,20 +108,18 @@ export class RmqService implements OnModuleInit {
           async (msg: Message) => {
             const JsonMsg = JSON.parse(msg.content.toString());
             const bookmakers = [4, 8, 13, 74, 145];
-            const selectedMarkets = [
-              1, 2, 3, 21, 28, 41, 42, 52, 64, 165, 202, 226, 235, 236, 281,
-              342, 866, 1558,
-            ];
             if (JsonMsg.Body) {
               const jsonData = JsonMsg.Body;
               if (jsonData.Events) {
                 const events = jsonData.Events;
                 // 업데이트를 위한 구조화
+
                 const data = {
                   gameId: null,
                   gameStatus: null,
                   marketId: null,
                   providerId: null,
+                  score: null,
                   odds: [],
                 };
                 for (const i in events) {
@@ -136,14 +130,26 @@ export class RmqService implements OnModuleInit {
 
                   // 경기상태에대한 정보
                   if (events[i].Fixture) {
-                    data.gameStatus = this.crawlerService.gameStatus(
-                      events[i].Fixture.Status,
-                    );
+                    data.gameStatus = events[i].Fixture.Status;
                   }
-                  let gameList: any = await this.cacheService.getKey(
-                    `gameList`,
-                  );
-                  if (!gameList) gameList = [];
+
+                  // 경기 스코어 대한 정보
+                  if (events[i].Livescore) {
+                    const score: any = {};
+                    score.period = events[i].Livescore.Scoreboard.CurrentPeriod;
+                    score.time = events[i].Livescore.Scoreboard.Time;
+                    // data.score.home =
+                    const home = events[i].Livescore.Scoreboard.Results.find(
+                      (e) => e.Position === '1',
+                    );
+                    const away = events[i].Livescore.Scoreboard.Results.find(
+                      (e) => e.Position === '2',
+                    );
+                    score.home = home.Value;
+                    score.away = away.Value;
+                    data.score = score;
+                    this.socket.allUserSend({ name: 'score', data });
+                  }
 
                   const markets = events[i].Markets;
                   if (markets) {
@@ -151,179 +157,30 @@ export class RmqService implements OnModuleInit {
                       // console.log(markets[j]);
                       // 마켓아이디 추가
                       const marketId = markets[j].Id;
-                      const marketName = markets[j].Name;
                       const providers = markets[j].Providers;
-                      if (selectedMarkets.indexOf(marketId) !== -1) {
-                        for (const p in providers) {
-                          // 제공업체 아이디추가;
-                          const providersId = providers[p].Id;
-                          if (bookmakers.indexOf(providersId) !== -1) {
-                            const provider = providers[p];
+                      for (const p in providers) {
+                        // 제공업체 아이디추가;
+                        const providersId = providers[p].Id;
+                        if (bookmakers.indexOf(providersId) !== -1) {
+                          const provider = providers[p];
 
-                            const 마켓이름 = marketName;
-                            const 마켓ID = marketId;
-                            const 제공업체 = provider;
-                            data.marketId = 마켓ID;
-                            data.providerId = 제공업체.Id;
-
-                            const game = gameList.find(
-                              (e) => e.game_id === 게임ID,
-                            );
-                            if (마켓이름.indexOf('1X2') !== -1) {
-                              for (const b in 제공업체.Bets) {
-                                const 배당 = 제공업체.Bets[b];
-                                // 리스트에서 Bets가 있을시 정보 변경
-                                if (game && game.folders) {
-                                  const folder = game.folders.find(
-                                    (e) =>
-                                      e.folders_market === 마켓ID &&
-                                      e.folders_bookmaker === 제공업체.Id &&
-                                      e.folders_game === 게임ID,
-                                  );
-                                  if (folder && folder.bets) {
-                                    const bet = folder.bets.find(
-                                      (e) => e.bets_id === 배당.Id,
-                                    );
-                                    bet.bets_price = 배당.Price;
-                                    bet.bets_status = 배당.Status;
-                                  }
-                                }
-
-                                const bets = {
-                                  bets_id: 배당.Id,
-                                  bets_name: 배당.Name,
-                                  bets_price: 배당.Price,
-                                  bets_start_price: 배당.StartPrice,
-                                  bets_status: 배당.Status,
-                                };
-                                data.odds.push(bets);
-                              }
-                            }
-                            if (
-                              마켓이름.indexOf('12') !== -1 ||
-                              마켓이름.indexOf('Winner') !== -1
-                            ) {
-                              for (const b in 제공업체.Bets) {
-                                const 배당 = 제공업체.Bets[b];
-                                // 리스트에서 Bets가 있을시 정보 변경
-                                if (game && game.folders) {
-                                  const folder = game.folders.find(
-                                    (e) =>
-                                      e.folders_market === 마켓ID &&
-                                      e.folders_bookmaker === 제공업체.Id &&
-                                      e.folders_game === 게임ID,
-                                  );
-                                  if (folder && folder.bets) {
-                                    const bet = folder.bets.find(
-                                      (e) => e.bets_id === 배당.Id,
-                                    );
-                                    bet.bets_price = 배당.Price;
-                                    bet.bets_status = 배당.Status;
-                                  }
-                                }
-                                const bets = {
-                                  bets_id: 배당.Id,
-                                  bets_name: 배당.Name,
-                                  bets_price: 배당.Price,
-                                  bets_start_price: 배당.StartPrice,
-                                  bets_status: 배당.Status,
-                                };
-                                data.odds.push(bets);
-                              }
-                            }
-                            if (마켓이름.indexOf('Handicap') !== -1) {
-                              let 기준점s = 제공업체.Bets.map(
-                                (e) => e.BaseLine,
-                              );
-                              기준점s = Array.from(new Set(기준점s));
-                              for (const ki in 기준점s) {
-                                const 기준점 = 기준점s[ki];
-                                if (
-                                  기준점.indexOf('.25') === -1 &&
-                                  기준점.indexOf('.75') === -1
-                                ) {
-                                  const 배당 = 제공업체.Bets.filter(
-                                    (e) => e.BaseLine === 기준점,
-                                  );
-                                  for (const b in 배당) {
-                                    const 배당 = 제공업체.Bets[b];
-                                    if (game && game.folders) {
-                                      const folder = game.folders.find(
-                                        (e) =>
-                                          e.folders_market === 마켓ID &&
-                                          e.folders_bookmaker === 제공업체.Id &&
-                                          e.folders_game === 게임ID &&
-                                          e.folders_line === 기준점,
-                                      );
-                                      if (folder && folder.bets) {
-                                        const bet = folder.bets.find(
-                                          (e) => e.bets_id === 배당.Id,
-                                        );
-                                        bet.bets_price = 배당.Price;
-                                        bet.bets_status = 배당.Status;
-                                      }
-                                    }
-                                    const bets = {
-                                      bets_id: 배당.Id,
-                                      bets_name: 배당.Name,
-                                      bets_price: 배당.Price,
-                                      bets_start_price: 배당.StartPrice,
-                                      bets_status: 배당.Status,
-                                    };
-                                    data.odds.push(bets);
-                                  }
-                                }
-                              }
-                            }
-                            if (마켓이름.indexOf('Under/Over') !== -1) {
-                              let 기준점s = 제공업체.Bets.map(
-                                (e) => e.BaseLine,
-                              );
-                              기준점s = Array.from(new Set(기준점s));
-                              for (const ki in 기준점s) {
-                                const 기준점 = 기준점s[ki];
-                                const 배당 = 제공업체.Bets.filter(
-                                  (e) => e.BaseLine === 기준점,
-                                );
-                                for (const b in 배당) {
-                                  const 배당 = 제공업체.Bets[b];
-                                  if (game && game.folders) {
-                                    const folder = game.folders.find(
-                                      (e) =>
-                                        e.folders_market === 마켓ID &&
-                                        e.folders_bookmaker === 제공업체.Id &&
-                                        e.folders_game === 게임ID &&
-                                        e.folders_line === 기준점,
-                                    );
-                                    if (folder && folder.bets) {
-                                      const bet = folder.bets.find(
-                                        (e) => e.bets_id === 배당.Id,
-                                      );
-                                      bet.bets_price = 배당.Price;
-                                      bet.bets_status = 배당.Status;
-                                    }
-                                  }
-                                  const bets = {
-                                    bets_id: 배당.Id,
-                                    bets_name: 배당.Name,
-                                    bets_price: 배당.Price,
-                                    bets_start_price: 배당.StartPrice,
-                                    bets_status: 배당.Status,
-                                  };
-                                  data.odds.push(bets);
-                                }
-                              }
-                            }
-                            await this.cacheService.setKey(
-                              `gameList`,
-                              gameList,
-                            );
+                          const 마켓ID = marketId;
+                          const 제공업체 = provider;
+                          data.marketId = 마켓ID;
+                          data.providerId = 제공업체.Id;
+                          for (const b in provider.Bets) {
+                            const bets = provider.Bets[b];
+                            const updated = {
+                              bets_id: bets.Id,
+                              bet_price: bets.Price,
+                              bet_status: bets.Status,
+                            };
+                            data.odds.push(updated);
                           }
                         }
-
-                        this.socket.allUserSend({ name: 'prematch', data });
                       }
                     }
+                    this.socket.allUserSend({ name: 'inplay', data });
                   }
                 }
               }
