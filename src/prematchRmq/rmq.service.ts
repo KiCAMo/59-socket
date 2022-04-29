@@ -175,9 +175,9 @@ export class RmqService implements OnModuleInit {
                             const updated = {
                               bets_id: bets.Id,
                               bets_name: bets.Name,
-                              bet_price: bets.Price,
-                              bet_status: bets.Status,
-                              bet_line: bets.BaseLine ? bets.BaseLine : null,
+                              bets_price: bets.Price,
+                              bets_status: this.betsStatus(bets.Status),
+                              bets_line: bets.BaseLine ? bets.BaseLine : null,
                             };
                             data.odds.push(updated);
                           }
@@ -247,6 +247,27 @@ export class RmqService implements OnModuleInit {
       result = '취소';
     if (status === 5) result = '연기';
 
+    return result;
+  }
+
+  // 정산 상태
+  public betSettlement(settle) {
+    let result = 'wait';
+    if (settle === -1) result = 'cancelled';
+    if (settle === 1) result = 'lose';
+    if (settle === 2) result = 'win';
+    if (settle === 3) result = 'refund';
+    if (settle === 4) result = 'halflose';
+    if (settle === 5) result = 'halfwin';
+    return result;
+  }
+
+  // 벳 상태
+  public betsStatus(status) {
+    let result = 'wait';
+    if (status === 1) result = 'opened';
+    if (status === 2) result = 'suspended';
+    if (status === 3) result = 'settled';
     return result;
   }
 }
