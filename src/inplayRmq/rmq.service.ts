@@ -105,7 +105,7 @@ export class RmqService implements OnModuleInit {
           '_4079_',
           async (msg: Message) => {
             const JsonMsg = JSON.parse(msg.content.toString());
-            const bookmakers = [4, 8, 13, 74, 145];
+            const bookmakers = [8];
             if (JsonMsg.Body) {
               const jsonData = JsonMsg.Body;
               if (jsonData.Events) {
