@@ -108,7 +108,6 @@ export class RmqService implements OnModuleInit {
             const bookmakers = [4, 8, 13, 74, 145];
             if (JsonMsg.Body) {
               const jsonData = JsonMsg.Body;
-              console.log(jsonData);
               if (jsonData.Events) {
                 const events = jsonData.Events;
                 // 업데이트를 위한 구조화
