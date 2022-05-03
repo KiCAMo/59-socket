@@ -29,8 +29,6 @@ import {
 import config from 'config';
 import axios from 'axios';
 import { SocketGateway } from '../socket/socket.gateway';
-
-// import { FoldersService } from '../core/folders/folders.service';
 const appSettings = config.get<IRabbitMQSettings>('RABBITMQ_SETTINGS');
 
 @Injectable()
@@ -49,7 +47,7 @@ export class RmqService implements OnModuleInit {
 
   // eslint-disable-next-line @typescript-eslint/explicit-member-accessibility
   async onModuleInit() {
-    const url = `https://prematch.lsports.eu/OddService/EnablePackage?username=${appSettings.username}&password=${appSettings.password}&guid=01bb05fb-028a-4e67-830e-16d073902c1d`;
+    const url = `https://inplay.lsports.eu/api/Package/EnablePackage?username=${appSettings.username}&password=${appSettings.password}&packageid=${appSettings.INPLAY_LSPORTS_PID}`;
     await axios.get(url);
 
     const connection_uri = this.createConnectionUri(this.options.connection);
@@ -104,20 +102,21 @@ export class RmqService implements OnModuleInit {
       json: false,
       setup: async (channel: Channel) => {
         await channel.consume(
-          '_4078_',
+          '_4079_',
           async (msg: Message) => {
             const JsonMsg = JSON.parse(msg.content.toString());
+            const bookmakers = [4, 8, 13, 74, 145];
             if (JsonMsg.Body) {
               const jsonData = JsonMsg.Body;
+              console.log(jsonData);
               if (jsonData.Events) {
                 const events = jsonData.Events;
                 // 업데이트를 위한 구조화
-                // console.log(events);
                 const data = {
                   gameId: null,
                   gameStatus: null,
                   marketId: null,
-                  bookmakerId: null,
+                  providerId: null,
                   score: null,
                   odds: [],
                 };
@@ -126,34 +125,35 @@ export class RmqService implements OnModuleInit {
                   const gameId = events[i].FixtureId;
                   const 게임ID = String(gameId);
                   data.gameId = 게임ID;
+
                   // 경기상태에대한 정보
+                  if (events[i].Fixture) {
+                    data.gameStatus = events[i].Fixture.Status;
+                  }
 
                   // 경기 스코어 대한 정보
-                  // if (events[i].Livescore) {
-                  //   const score: any = {};
-                  //   score.period = events[i].Livescore.Scoreboard.CurrentPeriod;
-                  //   score.time = events[i].Livescore.Scoreboard.Time;
-                  //   // data.score.home =
-                  //   const home = events[i].Livescore.Scoreboard.Results.find(
-                  //     (e) => e.Position === '1',
-                  //   );
-                  //   const away = events[i].Livescore.Scoreboard.Results.find(
-                  //     (e) => e.Position === '2',
-                  //   );
-                  //   score.home = home.Value;
-                  //   score.away = away.Value;
-                  //   data.score = score;
-                  //   this.socket.allUserSend({ name: 'score', data });
-                  // }
+                  if (events[i].Livescore) {
+                    // console.log(JSON.stringify(events[i].Livescore));
+                    const score: any = {};
+                    score.period = events[i].Livescore.Scoreboard.CurrentPeriod;
+                    score.time = events[i].Livescore.Scoreboard.Time;
+                    // data.score.home =
+                    const home = events[i].Livescore.Scoreboard.Results.find(
+                      (e) => e.Position === '1',
+                    );
+                    const away = events[i].Livescore.Scoreboard.Results.find(
+                      (e) => e.Position === '2',
+                    );
+                    score.home = home.Value;
+                    score.away = away.Value;
+                    data.score = score;
+                    this.socket.allUserSend({ name: 'score', data });
+                  }
 
                   const markets = events[i].Markets;
-                  const bookmakers = [4, 8, 13, 74, 145];
-                  const selectedMarkets = [
-                    1, 2, 3, 21, 28, 41, 42, 52, 64, 165, 202, 226, 235, 236,
-                    281, 342, 866, 1558,
-                  ];
                   if (markets) {
                     for (const j in markets) {
+                      // console.log(markets[j]);
                       // 마켓아이디 추가
                       const marketId = markets[j].Id;
                       const providers = markets[j].Providers;
@@ -166,7 +166,7 @@ export class RmqService implements OnModuleInit {
                           const 마켓ID = marketId;
                           const 제공업체 = provider;
                           data.marketId = 마켓ID;
-                          data.bookmakerId = 제공업체.Id;
+                          data.providerId = 제공업체.Id;
                           for (const b in provider.Bets) {
                             const bets = provider.Bets[b];
                             const updated = {
@@ -181,12 +181,7 @@ export class RmqService implements OnModuleInit {
                         }
                       }
                     }
-                    if (
-                      selectedMarkets.indexOf(data.marketId) !== -1 &&
-                      bookmakers.indexOf(data.bookmakerId) !== -1
-                    ) {
-                      this.socket.allUserSend({ name: 'prematch', data });
-                    }
+                    this.socket.allUserSend({ name: 'inplay', data });
                   }
                 }
               }
