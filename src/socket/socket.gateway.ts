@@ -21,24 +21,34 @@ const appSettings = config.get<IAppSettings>('APP_SETTINGS');
   allowEIO3: true,
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  client: Record<string, Socket>;
-
-  constructor() {
-    this.client = {};
-  }
+  activeUser = [];
 
   @WebSocketServer()
   server: Server;
   //소켓 연결시 오브젝트에 저장
   public async handleConnection(client: Socket) {
-    this.client[client.id] = client;
+    this.activeUser.push({ clientId: client.id });
+    console.log(this.activeUser);
     client.setMaxListeners(0);
   }
 
   //소켓 연결 해제시 오브젝트에서 제거
   public handleDisconnect(client: Socket): void {
-    console.log('disonnected', client.id);
-    delete this.client[client.id];
+    const index = this.activeUser.findIndex((e) => e.clientId === client.id);
+    this.activeUser.splice(index, 1);
+  }
+
+  public setUser(client: Socket, data: any): void {
+    const index = this.activeUser.findIndex((e) => e.clientId === client.id);
+    this.activeUser[index].members_nickname = data.user.members_nickname;
+    this.activeUser[index].members_id = data.user.members_id;
+    this.activeUser[index].members_sitename = data.user.members_sitename;
+    this.activeUser[index].members_seq = data.user.members_seq;
+    this.activeUser[index].members_cash = data.user.members_cash;
+  }
+
+  public connectedUserList(client: Socket): void {
+    client.emit(JSON.stringify(this.activeUser));
   }
 
   //소켓 연결 해제시 오브젝트에서 제거
