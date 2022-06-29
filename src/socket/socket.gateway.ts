@@ -41,6 +41,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('setUser')
   public setUser(client: Socket, data: any): void {
     const index = this.activeUser.findIndex((e) => e.clientId === client.id);
+    console.log(data);
     try {
       this.activeUser[index].members_nickname = data.user.members_nickname;
       this.activeUser[index].members_id = data.user.members_id;
@@ -49,6 +50,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.activeUser[index].members_cash = data.user.members_cash;
       this.activeUser[index].members_status = data.user.members_status;
       this.activeUser[index].members_type = data.user.members_type;
+      console.log(this.activeUser);
     } catch (e) {
       console.log(e);
     }
