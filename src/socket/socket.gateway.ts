@@ -56,7 +56,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('activeUser')
   public connectedUserList(client: Socket): void {
-    client.emit(JSON.stringify(this.activeUser));
+    client.emit('activeUser', JSON.stringify(this.activeUser));
   }
 
   //소켓 연결 해제시 오브젝트에서 제거
