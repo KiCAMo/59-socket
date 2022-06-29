@@ -50,6 +50,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.activeUser[index].members_cash = data.user.members_cash;
       this.activeUser[index].members_status = data.user.members_status;
       this.activeUser[index].members_type = data.user.members_type;
+      this.activeUser[index].id = data.user.id;
+      this.activeUser[index].domain = data.user.domain;
+      this.activeUser[index].agent = data.user.agent;
+
       console.log(this.activeUser);
     } catch (e) {
       console.log(e);
