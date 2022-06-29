@@ -35,8 +35,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //소켓 연결 해제시 오브젝트에서 제거
   public handleDisconnect(client: Socket): void {
     const index = this.activeUser.findIndex((e) => e.clientId === client.id);
-    console.log(this.activeUser);
     this.activeUser.splice(index, 1);
+    console.log(this.activeUser);
   }
 
   public setUser(client: Socket, data: any): void {
