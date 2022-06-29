@@ -53,7 +53,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.activeUser[index].id = data.user.id;
       this.activeUser[index].domain = data.user.domain;
       this.activeUser[index].agent = data.user.agent;
-
+      this.activeUser[index].parent = data.user.parent;
       console.log(this.activeUser);
     } catch (e) {
       console.log(e);
