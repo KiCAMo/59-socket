@@ -29,7 +29,6 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   //소켓 연결시 오브젝트에 저장
   public async handleConnection(client: Socket) {
     this.activeUser.push({ clientId: client.id });
-    console.log(this.activeUser);
     client.setMaxListeners(0);
   }
 
@@ -37,13 +36,11 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public handleDisconnect(client: Socket): void {
     const index = this.activeUser.findIndex((e) => e.clientId === client.id);
     this.activeUser.splice(index, 1);
-    console.log(this.activeUser);
   }
 
   @SubscribeMessage('setUser')
   public setUser(client: Socket, data: any): void {
     const index = this.activeUser.findIndex((e) => e.clientId === client.id);
-    console.log(data);
     try {
       this.activeUser[index].members_nickname = data.user.members_nickname;
       this.activeUser[index].members_id = data.user.members_id;
