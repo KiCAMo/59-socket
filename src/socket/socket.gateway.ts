@@ -3,6 +3,7 @@ import {
   WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import config from 'config';
@@ -39,15 +40,22 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(this.activeUser);
   }
 
+  @SubscribeMessage('setUser')
   public setUser(client: Socket, data: any): void {
     const index = this.activeUser.findIndex((e) => e.clientId === client.id);
-    this.activeUser[index].members_nickname = data.user.members_nickname;
-    this.activeUser[index].members_id = data.user.members_id;
-    this.activeUser[index].members_sitename = data.user.members_sitename;
-    this.activeUser[index].members_seq = data.user.members_seq;
-    this.activeUser[index].members_cash = data.user.members_cash;
+    console.log(data);
+    try {
+      this.activeUser[index].members_nickname = data.user.members_nickname;
+      this.activeUser[index].members_id = data.user.members_id;
+      this.activeUser[index].members_sitename = data.user.members_sitename;
+      this.activeUser[index].members_seq = data.user.members_seq;
+      this.activeUser[index].members_cash = data.user.members_cash;
+    } catch (e) {
+      console.log(e);
+    }
   }
 
+  @SubscribeMessage('activeUser')
   public connectedUserList(client: Socket): void {
     client.emit(JSON.stringify(this.activeUser));
   }
