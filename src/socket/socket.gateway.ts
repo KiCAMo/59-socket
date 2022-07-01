@@ -67,7 +67,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public logOutUser(client: Socket, data: any): void {
     console.log(client.id);
     const clientId = data.clientId;
-    this.server.to(clientId).emit('logOut');
+    client.to(clientId).emit('logOut');
   }
 
   @SubscribeMessage('activeUser')
