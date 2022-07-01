@@ -22,12 +22,14 @@ const appSettings = config.get<IAppSettings>('APP_SETTINGS');
   allowEIO3: true,
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  clinet = {};
   activeUser = [];
 
   @WebSocketServer()
   server: Server;
   //소켓 연결시 오브젝트에 저장
   public async handleConnection(client: Socket) {
+    this.clinet[client.id] = client;
     this.activeUser.push({ clientId: client.id });
     client.setMaxListeners(0);
   }
@@ -59,6 +61,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (e) {
       console.log(e);
     }
+  }
+
+  @SubscribeMessage('logOutUser')
+  public logOutUser(client: Socket, data: any): void {
+    console.log(client.id);
+    const clientId = data.clientId;
+    this.server.to(clientId).emit('logOut');
   }
 
   @SubscribeMessage('activeUser')
