@@ -57,7 +57,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.activeUser[index].agent = data.user.agent;
       this.activeUser[index].parent = data.user.parent;
       this.activeUser[index].currentMenu = data.user.currentMenu;
-      console.log(this.activeUser);
+      // console.log(this.activeUser);
     } catch (e) {
       console.log(e);
     }
@@ -67,7 +67,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   public logOutUser(client: Socket, data: any): void {
     console.log(client.id);
     const clientId = data.clientId;
-    console.log(clientId);
+    // console.log(clientId);
     this.server.to(clientId).emit('logOut');
   }
 
