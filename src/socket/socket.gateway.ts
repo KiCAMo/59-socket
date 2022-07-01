@@ -68,6 +68,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(client.id);
     const clientId = data.clientId;
     // console.log(clientId);
+    const index = this.activeUser.findIndex((e) => e.clientId === clientId);
+    if (index >= 0) this.activeUser.splice(index, 1);
     this.server.to(clientId).emit('logOut');
   }
 
