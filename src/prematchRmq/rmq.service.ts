@@ -108,7 +108,7 @@ export class RmqService implements OnModuleInit {
           async (msg: Message) => {
             const JsonMsg = JSON.parse(msg.content.toString());
             if (JsonMsg.Body) {
-              console.log(JsonMsg);
+              // console.log(JsonMsg);
               const jsonData = JsonMsg.Body;
               if (jsonData.Events) {
                 const events = jsonData.Events;
