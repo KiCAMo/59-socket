@@ -6,9 +6,6 @@
   "private": true,
   "license": "UNLICENSED",
   "engineStrict": true,
-  "engines": {
-    "node": "14.18.1"
-  },
   "scripts": {
     "build": "rimraf dist && tsc -p tsconfig.build.json",
     "format": "prettier --write \"src/**/*.ts\"",

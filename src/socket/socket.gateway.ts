@@ -85,4 +85,12 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // console.log(data);
     this.server.emit(obj.name, data);
   }
+
+  @SubscribeMessage('sendAllMessage')
+  public send(obj: any): void {
+    obj.timestamp = moment().unix();
+    const data = JSON.stringify(obj.data);
+    // console.log(data);
+    this.server.emit(obj.name, data);
+  }
 }

@@ -77,15 +77,6 @@
     "domain": "vk-77.com",
     "agent": "IGMR58"
   },
-  "MEGA_CASINO": {
-    "url": "http://api.ximaxmanager.com",
-    "operatorId": "vikbet",
-    "userIdPrefix": "vik",
-    "userIdExp": "vik",
-    "privateKey": "35C3959A5F742B8B63EF22E1822ECD30",
-    "min": 0,
-    "units": 0
-  },
   "AWS": {
     "AWS_S3_BUCKET_NAME": "static-sdsoft",
     "AWS_ACCESS_KEY_ID": "AKIAQZ6QGF6AU63LBXYX",
