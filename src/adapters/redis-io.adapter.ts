@@ -6,7 +6,7 @@ import { createAdapter } from '@socket.io/redis-adapter';
 // import config from 'config';
 // const redisSettings = config.get<IRedisSettings>('REDIS_SETTINGS');
 const pubClient = createClient({
-  url: 'redis://platform.91qhwr.ng.0001.apne1.cache.amazonaws.com:6379',
+  url: 'redis://127.0.0.1:6379',
 });
 pubClient.connect();
 
