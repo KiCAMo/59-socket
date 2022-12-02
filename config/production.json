@@ -8,30 +8,6 @@
     "bodyLimit": "50mb",
     "bodyParameterLimit": 50000000
   },
-  "DB_SETTINGS": {
-    "host": "solution.cv2f0sz5mwh5.ap-northeast-1.rds.amazonaws.com",
-    "port": 3306,
-    "username": "admin",
-    "password": "upYYL6BQmwtV9DMjg3wN",
-    "database": "platform"
-  },
-  "RABBITMQ_SETTINGS": {
-    "exchange": "lsports",
-    "name": "rabbitmq",
-    "host": "inplay-rmq.lsports.eu",
-    "vhost": "Customers",
-    "port": 5672,
-    "username": "betconstructuae@gmail.com",
-    "password": "AD!1adgf34",
-    "INPLAY_LSPORTS_PID":"4079",
-    "INPLAY_LSPORTS_GUID":"01bb05fb-028a-4e67-830e-16d073902c1d"
-  },
-  "REDIS_SETTINGS": {
-    "use": true,
-    "host": "platform-001.91qhwr.0001.apne1.cache.amazonaws.com",
-    "port": 6379,
-    "password": "7kjjEhdX2qTHPeCU"
-  },
   "LOGGER_SETTINGS": {
     "level": "info",
     "silence": [
@@ -43,44 +19,5 @@
     "secretKey": "alskdjflthzpt",
     "expiresIn": 30,
     "algorithms": ["HS256"]
-  },
-  "CORS_SETTINGS": {
-    "allowedOrigins": [],
-    "allowedUrls": [],
-    "allowedPaths": [],
-    "allowedMethods": [
-      "GET",
-      "POST",
-      "OPTIONS"
-    ],
-    "allowedCredentials": true
-  },
-  "GRAPHQL_SETTINGS": {
-    "playground": true,
-    "debug": true,
-    "introspection": true,
-    "installSubscriptionHandlers": true
-  },
-  "GRAPHQL_API_URLS": [],
-  "ACTION_BYPASS": [
-    "healthz",
-    "oauth"
-  ],
-  "TOKEN_GAME": {
-    "url": "http://api.tgame365.com/api",
-    "agentId": "vikbettoken",
-    "apiKey": "63bad0236831b33200c7e68ed73244ef"
-  },
-  "LOTUS": {
-    "url": "http://token.lotusgm09.com/get_token",
-    "apikey": "b930bc9b54cd433792eae2199e368ff1",
-    "domain": "vk-77.com",
-    "agent": "IGMR58"
-  },
-  "AWS": {
-    "AWS_S3_BUCKET_NAME": "static-sdsoft",
-    "AWS_ACCESS_KEY_ID": "AKIAQZ6QGF6AU63LBXYX",
-    "AWS_SECRET_ACCESS_KEY": "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",
-    "AWS_REGION": "ap-northeast-1"
   }
 }
