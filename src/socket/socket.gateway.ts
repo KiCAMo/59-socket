@@ -6,12 +6,12 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import config from 'config';
+// import config from 'config';
 import moment from 'moment';
 
-const appSettings = config.get<IAppSettings>('APP_SETTINGS');
+// const appSettings = config.get<IAppSettings>('APP_SETTINGS');
 
-@WebSocketGateway(appSettings.socketPort, {
+@WebSocketGateway({
   transports: ['websocket', 'polling'],
   cors: {
     transports: ['websocket', 'polling'],
