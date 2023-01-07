@@ -19,7 +19,7 @@ import moment from 'moment';
     origin: '*',
     credentials: true,
   },
-  allowEIO3: true,
+  allowEIO3: false,
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   clinet = {};
