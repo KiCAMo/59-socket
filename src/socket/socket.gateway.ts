@@ -6,12 +6,9 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-// import config from 'config';
 import moment from 'moment';
 
-// const appSettings = config.get<IAppSettings>('APP_SETTINGS');
-
-@WebSocketGateway({
+@WebSocketGateway(81, {
   transports: ['websocket', 'polling'],
   cors: {
     transports: ['websocket', 'polling'],
@@ -19,7 +16,7 @@ import moment from 'moment';
     origin: '*',
     credentials: true,
   },
-  allowEIO3: false,
+  allowEIO3: true,
 })
 export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   clinet = {};
