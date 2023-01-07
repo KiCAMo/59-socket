@@ -8,7 +8,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import moment from 'moment';
 
-@WebSocketGateway(81, {
+@WebSocketGateway({
   transports: ['websocket', 'polling'],
   cors: {
     transports: ['websocket', 'polling'],
