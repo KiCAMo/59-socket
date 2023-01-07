@@ -1,4 +1,4 @@
-FROM 055734316929.dkr.ecr.ap-northeast-1.amazonaws.com/node:latest
+FROM node:16 AS builder
 
 WORKDIR /app
 
